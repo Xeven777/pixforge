@@ -1,0 +1,42 @@
+[package]
+name = "pixforge"
+version = "0.1.0"
+description = "Local-first image and video processing"
+authors = []
+edition = "2021"
+
+[lib]
+name = "pixforge_lib"
+crate-type = ["staticlib", "cdylib", "rlib"]
+
+[build-dependencies]
+tauri-build = { version = "2", features = [] }
+
+[dependencies]
+tauri = { version = "2", features = [] }
+tauri-plugin-fs = "2"
+tauri-plugin-dialog = "2"
+tauri-plugin-shell = "2"
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+tokio = { version = "1", features = ["full"] }
+rayon = "1.10"
+image = { version = "0.25", features = ["jpeg", "png", "gif", "webp"] }
+ravif = { version = "0.11", default-features = false, features = ["threading"] }
+rav1e = { version = "0.7", default-features = false }
+rgb = "0.8"
+webp = "0.3"
+img-parts = "0.3"
+uuid = { version = "1", features = ["v4"] }
+dirs = "5"
+anyhow = "1"
+
+[profile.release]
+panic = "abort"
+codegen-units = 1
+lto = true
+opt-level = "s"
+strip = true
+
+[features]
+custom-protocol = ["tauri/custom-protocol"]
