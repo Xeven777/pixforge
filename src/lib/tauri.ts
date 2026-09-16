@@ -1,6 +1,20 @@
 import { invoke } from "@tauri-apps/api/core";
+import { listen, type UnlistenFn } from "@tauri-apps/api/event";
 import { open } from "@tauri-apps/plugin-dialog";
 import { stat } from "@tauri-apps/plugin-fs";
+
+export interface LaunchPayload {
+  tool: string | null;
+  files: string[];
+}
+
+export async function takeLaunchFiles(): Promise<LaunchPayload> {
+  return invoke("take_launch_files");
+}
+
+export async function onLaunchFiles(cb: (payload: LaunchPayload) => void): Promise<UnlistenFn> {
+  return listen<LaunchPayload>("launch-files", (event) => cb(event.payload));
+}
 
 export async function statFiles(paths: string[]): Promise<{ path: string; size: number }[]> {
   return Promise.all(
@@ -72,6 +86,22 @@ export async function extractAudio(
   outputDir: string
 ): Promise<{ outputPath: string }> {
   return invoke("extract_audio", { path, outputDir });
+}
+
+export interface PreviewResult {
+  originalSize: number;
+  compressedSize: number;
+  width: number;
+  height: number;
+  originalPreview: string;
+  compressedPreview: string;
+}
+
+export async function comparePreview(
+  path: string,
+  options: { format: "jpeg" | "webp"; quality: number; maxDimension?: number }
+): Promise<PreviewResult> {
+  return invoke("compare_preview", { path, options });
 }
 
 export async function savePreset(preset: Omit<Preset, "id" | "createdAt">): Promise<Preset> {

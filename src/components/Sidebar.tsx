@@ -1,10 +1,11 @@
 import { NavLink } from "react-router-dom";
-import { ImageDown, RefreshCw, Video, Settings } from "lucide-react";
+import { ImageDown, RefreshCw, Columns2, Video, Settings } from "lucide-react";
 import clsx from "clsx";
 
 const nav = [
   { to: "/compress", label: "Compress", icon: ImageDown },
   { to: "/convert", label: "Convert", icon: RefreshCw },
+  { to: "/preview", label: "Preview", icon: Columns2 },
   { to: "/video", label: "Video", icon: Video },
   { to: "/settings", label: "Settings", icon: Settings },
 ];

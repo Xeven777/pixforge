@@ -1,0 +1,7 @@
+[Nemo Action]
+Name=Open with Pixforge
+Comment=Open the selected images in Pixforge
+Exec=__PIXFORGE_EXEC__ %F
+Icon-Name=pixforge
+Selection=NotNone
+Extensions=jpg;jpeg;png;webp;gif;heic;heif;

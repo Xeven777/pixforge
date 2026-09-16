@@ -1,0 +1,5 @@
+#!/usr/bin/env bash
+# Nautilus passes selected paths (newline-separated) via this env var.
+mapfile -t files <<< "$NAUTILUS_SCRIPT_SELECTED_FILE_PATHS"
+[ ${#files[@]} -eq 0 ] && exit 0
+exec __PIXFORGE_EXEC__ "${files[@]}"

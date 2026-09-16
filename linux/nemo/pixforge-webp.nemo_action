@@ -1,0 +1,7 @@
+[Nemo Action]
+Name=Convert to WebP (Pixforge)
+Comment=Convert the selected images to WebP with Pixforge
+Exec=__PIXFORGE_EXEC__ --tool convert %F
+Icon-Name=pixforge
+Selection=NotNone
+Extensions=jpg;jpeg;png;gif;heic;heif;

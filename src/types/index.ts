@@ -17,6 +17,7 @@ export interface CompressOptions {
   lossless: boolean;
   preserveExif: boolean;
   outputDir?: string;
+  maxDimension?: number;
 }
 
 export interface ConvertOptions {
@@ -24,6 +25,7 @@ export interface ConvertOptions {
   quality: number;
   effort: number;
   outputDir?: string;
+  maxDimension?: number;
 }
 
 export interface VideoCompressOptions {

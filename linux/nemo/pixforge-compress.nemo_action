@@ -1,0 +1,7 @@
+[Nemo Action]
+Name=Compress with Pixforge
+Comment=Compress the selected images with Pixforge
+Exec=__PIXFORGE_EXEC__ --tool compress %F
+Icon-Name=pixforge
+Selection=NotNone
+Extensions=jpg;jpeg;png;webp;gif;heic;heif;

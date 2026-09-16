@@ -1,8 +1,12 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { compressImages, statFiles } from "../lib/tauri";
+import { registerLaunchTarget } from "../lib/launchBus";
 import DropZone from "../components/DropZone";
 import FileQueue from "../components/FileQueue";
+import DevicePresets from "../components/DevicePresets";
+import MaxDimensionInput from "../components/MaxDimensionInput";
 import type { QueueFile, CompressOptions } from "../types";
+import type { DevicePreset } from "../lib/presets";
 
 function makeId() {
   return Math.random().toString(36).slice(2);
@@ -14,7 +18,16 @@ export default function ImageCompress() {
   const [lossless, setLossless] = useState(false);
   const [preserveExif, setPreserveExif] = useState(true);
   const [outputDir, setOutputDir] = useState<string | undefined>();
+  const [maxDimension, setMaxDimension] = useState<number | undefined>();
+  const [activePreset, setActivePreset] = useState<string | null>(null);
   const [running, setRunning] = useState(false);
+
+  const applyPreset = (p: DevicePreset) => {
+    setActivePreset(p.id);
+    setQuality(p.quality);
+    setMaxDimension(p.maxDimension);
+    setLossless(false);
+  };
 
   const addFiles = useCallback(async (paths: string[]) => {
     const stats = await statFiles(paths);
@@ -30,10 +43,12 @@ export default function ImageCompress() {
     ]);
   }, []);
 
+  useEffect(() => registerLaunchTarget("compress", (paths) => { void addFiles(paths); }), [addFiles]);
+
   const run = async () => {
     if (!files.length || running) return;
     setRunning(true);
-    const opts: CompressOptions = { quality, lossless, preserveExif, outputDir };
+    const opts: CompressOptions = { quality, lossless, preserveExif, outputDir, maxDimension };
     const paths = files.map((f) => f.path);
 
     setFiles((prev) => prev.map((f) => ({ ...f, status: "processing", progress: 0 })));
@@ -60,11 +75,14 @@ export default function ImageCompress() {
       <h1 className="text-2xl font-bold">Image Compression</h1>
 
       <DropZone
-        accept={{ "image/*": [".jpg", ".jpeg", ".png", ".gif", ".webp"] }}
+        accept={{ "image/*": [".jpg", ".jpeg", ".png", ".gif", ".webp", ".heic", ".heif"] }}
         onFiles={addFiles}
+        label="Drop images (JPG, PNG, WebP, HEIC…) here or click to browse"
       />
 
       <div className="bg-surface-1 rounded-xl p-5 space-y-4">
+        <DevicePresets active={activePreset} onSelect={applyPreset} />
+
         <div>
           <label className="flex justify-between text-sm mb-1.5">
             <span>Quality</span>
@@ -72,16 +90,21 @@ export default function ImageCompress() {
           </label>
           <input
             type="range" min={1} max={100} value={quality}
-            onChange={(e) => setQuality(+e.target.value)}
+            onChange={(e) => { setQuality(+e.target.value); setActivePreset(null); }}
             disabled={lossless}
             className="w-full accent-violet-500 disabled:opacity-40"
           />
         </div>
 
+        <MaxDimensionInput
+          value={maxDimension}
+          onChange={(v) => { setMaxDimension(v); setActivePreset(null); }}
+        />
+
         <label className="flex items-center gap-3 text-sm cursor-pointer">
           <input
             type="checkbox" checked={lossless}
-            onChange={(e) => setLossless(e.target.checked)}
+            onChange={(e) => { setLossless(e.target.checked); setActivePreset(null); }}
             className="w-4 h-4 accent-violet-500"
           />
           Lossless

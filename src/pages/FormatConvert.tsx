@@ -1,8 +1,12 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { convertImages, statFiles } from "../lib/tauri";
+import { registerLaunchTarget } from "../lib/launchBus";
 import DropZone from "../components/DropZone";
 import FileQueue from "../components/FileQueue";
+import DevicePresets from "../components/DevicePresets";
+import MaxDimensionInput from "../components/MaxDimensionInput";
 import type { QueueFile, ConvertOptions } from "../types";
+import type { DevicePreset } from "../lib/presets";
 
 function makeId() {
   return Math.random().toString(36).slice(2);
@@ -13,7 +17,15 @@ export default function FormatConvert() {
   const [format, setFormat] = useState<"webp" | "avif">("webp");
   const [quality, setQuality] = useState(80);
   const [effort, setEffort] = useState(4);
+  const [maxDimension, setMaxDimension] = useState<number | undefined>();
+  const [activePreset, setActivePreset] = useState<string | null>(null);
   const [running, setRunning] = useState(false);
+
+  const applyPreset = (p: DevicePreset) => {
+    setActivePreset(p.id);
+    setQuality(p.quality);
+    setMaxDimension(p.maxDimension);
+  };
 
   const addFiles = useCallback(async (paths: string[]) => {
     const stats = await statFiles(paths);
@@ -29,10 +41,12 @@ export default function FormatConvert() {
     ]);
   }, []);
 
+  useEffect(() => registerLaunchTarget("convert", (paths) => { void addFiles(paths); }), [addFiles]);
+
   const run = async () => {
     if (!files.length || running) return;
     setRunning(true);
-    const opts: ConvertOptions = { format, quality, effort };
+    const opts: ConvertOptions = { format, quality, effort, maxDimension };
 
     setFiles((prev) => prev.map((f) => ({ ...f, status: "processing", progress: 0 })));
 
@@ -58,12 +72,14 @@ export default function FormatConvert() {
       <h1 className="text-2xl font-bold">Format Conversion</h1>
 
       <DropZone
-        accept={{ "image/*": [".jpg", ".jpeg", ".png", ".gif"] }}
+        accept={{ "image/*": [".jpg", ".jpeg", ".png", ".gif", ".heic", ".heif"] }}
         onFiles={addFiles}
-        label="Drop PNG / JPG / GIF files here or click to browse"
+        label="Drop PNG / JPG / GIF / HEIC files here or click to browse"
       />
 
       <div className="bg-surface-1 rounded-xl p-5 space-y-4">
+        <DevicePresets active={activePreset} onSelect={applyPreset} />
+
         <div>
           <label className="text-sm block mb-2">Output format</label>
           <div className="flex gap-3">
@@ -90,7 +106,7 @@ export default function FormatConvert() {
           </label>
           <input
             type="range" min={1} max={100} value={quality}
-            onChange={(e) => setQuality(+e.target.value)}
+            onChange={(e) => { setQuality(+e.target.value); setActivePreset(null); }}
             className="w-full accent-violet-500"
           />
         </div>
@@ -106,6 +122,11 @@ export default function FormatConvert() {
             className="w-full accent-violet-500"
           />
         </div>
+
+        <MaxDimensionInput
+          value={maxDimension}
+          onChange={(v) => { setMaxDimension(v); setActivePreset(null); }}
+        />
       </div>
 
       <button

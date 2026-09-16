@@ -10,6 +10,7 @@ pub struct CompressOptions {
     pub lossless: bool,
     pub preserve_exif: bool,
     pub output_dir: Option<String>,
+    pub max_dimension: Option<u32>,
 }
 
 #[derive(Debug, Serialize)]
@@ -29,8 +30,15 @@ pub fn compress_images(
         .par_iter()
         .map(|path| {
             let input = PathBuf::from(path);
-            let output = image_ops::output_path(&input, &options.output_dir, None)?;
-            image_ops::compress(&input, &output, options.quality, options.lossless, options.preserve_exif)?;
+            // HEIC/HEIF is decoded then re-encoded as JPEG (or PNG when lossless),
+            // so the output extension must not stay .heic.
+            let new_ext = if image_ops::is_heic(&input) {
+                Some(if options.lossless { "png" } else { "jpg" })
+            } else {
+                None
+            };
+            let output = image_ops::output_path(&input, &options.output_dir, new_ext)?;
+            image_ops::compress(&input, &output, options.quality, options.lossless, options.preserve_exif, options.max_dimension)?;
             let output_size = std::fs::metadata(&output)
                 .map(|m| m.len())
                 .unwrap_or(0);

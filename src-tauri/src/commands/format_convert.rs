@@ -10,6 +10,7 @@ pub struct ConvertOptions {
     pub quality: u8,
     pub effort: u8,
     pub output_dir: Option<String>,
+    pub max_dimension: Option<u32>,
 }
 
 #[derive(Debug, Serialize)]
@@ -35,8 +36,8 @@ pub fn convert_images(
             };
             let output = image_ops::output_path(&input, &options.output_dir, Some(ext))?;
             match options.format.as_str() {
-                "avif" => image_ops::to_avif(&input, &output, options.quality, options.effort)?,
-                _ => image_ops::to_webp(&input, &output, options.quality)?,
+                "avif" => image_ops::to_avif(&input, &output, options.quality, options.effort, options.max_dimension)?,
+                _ => image_ops::to_webp(&input, &output, options.quality, options.max_dimension)?,
             }
             let output_size = std::fs::metadata(&output)
                 .map(|m| m.len())
